@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataDrop - Share Data Instantly</title>
+    <meta name="description" content="Share text and data instantly with secure codes">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;min-height:100vh;padding:16px;color:#333;font-size:13px}
+        .c{max-width:460px;margin:0 auto;padding-top:24px}
+        .h{text-align:center;margin-bottom:20px}
+        .h h1{font-size:18px;font-weight:600;color:#111;margin-bottom:2px}
+        .h p{font-size:11px;color:#999}
+        .card{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05),0 2px 8px rgba(0,0,0,0.03);padding:18px;margin-bottom:10px}
+        textarea{width:100%;min-height:120px;padding:12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:12px;font-family:'SF Mono',Monaco,Consolas,monospace;resize:none;background:#fafafa;transition:all .12s;line-height:1.5}
+        textarea:focus{outline:none;border-color:#10b981;background:#fff;box-shadow:0 0 0 3px rgba(16,185,129,0.08)}
+        textarea::placeholder{color:#bbb}
+        .row{display:flex;gap:8px;margin-top:10px}
+        .btn{flex:1;padding:11px 16px;border:none;border-radius:9px;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px}
+        .btn:active{transform:scale(0.98)}
+        .btn:disabled{opacity:0.6;cursor:not-allowed}
+        .bp{background:#10b981;color:#fff}
+        .bp:hover:not(:disabled){background:#059669}
+        .bs{background:#f1f1f1;color:#444}
+        .bs:hover{background:#e8e8e8}
+        .d{display:flex;align-items:center;gap:10px;margin:14px 0;color:#aaa;font-size:10px}
+        .d::before,.d::after{content:'';flex:1;height:1px;background:#eee}
+        .ci{flex:1;padding:11px;border:1.5px solid #e8e8e8;border-radius:9px;font-size:14px;font-family:'SF Mono',Monaco,monospace;text-transform:uppercase;letter-spacing:3px;text-align:center;background:#fafafa;transition:all .12s}
+        .ci:focus{outline:none;border-color:#10b981;background:#fff;box-shadow:0 0 0 3px rgba(16,185,129,0.08)}
+        .ci::placeholder{letter-spacing:normal;color:#bbb;text-transform:none}
+        .r{margin-top:12px;padding:14px;border-radius:10px;animation:si .15s ease}
+        @keyframes si{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+        .rs{background:#f0fdf4;border:1px solid #bbf7d0}
+        .re{background:#fef2f2;border:1px solid #fecaca}
+        .rb{background:#eff6ff;border:1px solid #bfdbfe}
+        .rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+        .rl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#888}
+        .rx{background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;padding:0}
+        .rx:hover{color:#666}
+        .code{font-size:26px;font-weight:700;color:#10b981;font-family:'SF Mono',Monaco,monospace;letter-spacing:5px;text-align:center;padding:6px 0}
+        .rd{background:#fff;border:1px solid #d1fae5;border-radius:7px;padding:10px;font-family:'SF Mono',Monaco,monospace;font-size:11px;max-height:140px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;line-height:1.4}
+        .ra{display:flex;gap:5px;margin-top:10px}
+        .sm{padding:7px 12px;font-size:11px;border-radius:7px}
+        .exp{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.04);cursor:pointer;transition:background .12s}
+        .exp:hover{background:#fafafa}
+        .exp-i{width:28px;height:28px;background:#f3f4f6;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px}
+        .exp-t{flex:1}
+        .exp-t span{font-size:12px;color:#333}
+        .exp-t small{font-size:10px;color:#999;display:block}
+        .exp-a{color:#aaa;font-size:10px;transition:transform .15s}
+        .exp.open .exp-a{transform:rotate(180deg)}
+        .panel{max-height:0;overflow:hidden;transition:max-height .2s ease}
+        .panel.open{max-height:350px;overflow-y:auto}
+        .pc{padding-top:10px}
+        .item{background:#fff;border-radius:9px;padding:10px 12px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+        .item-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+        .item-c{font-weight:600;color:#10b981;font-family:monospace;font-size:11px;letter-spacing:1px}
+        .item-t{font-size:9px;color:#aaa}
+        .item-p{font-size:10px;color:#777;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+        .item-a{display:flex;gap:4px}
+        .bx{padding:4px 8px;font-size:9px;border-radius:5px;background:#f5f5f5;color:#555;border:none;cursor:pointer}
+        .bx:hover{background:#eee}
+        .bd{color:#e55;background:#fff5f5}
+        .bd:hover{background:#ffeeee}
+        .empty{text-align:center;padding:20px;color:#aaa;font-size:11px}
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1f2937;color:#fff;padding:9px 16px;border-radius:8px;font-size:11px;font-weight:500;opacity:0;transition:all .15s;z-index:99;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .foot{text-align:center;padding:16px;color:#ccc;font-size:9px}
+        .hide{display:none}
+        .spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .5s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .status{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#10b981;margin-top:6px}
+        .status.off{color:#ef4444}
+        .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .setup{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(16,185,129,0.2)}
+        .setup h3{font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+        .setup p{font-size:11px;opacity:0.9;margin-bottom:10px}
+        .setup input{width:100%;padding:10px;border:none;border-radius:7px;font-size:11px;font-family:monospace;margin-bottom:8px}
+        .setup button{width:100%;padding:10px;background:#fff;color:#10b981;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+        .setup button:hover{background:#f0fdf4}
+        .setup-link{color:#fff;text-decoration:underline;font-size:10px;display:inline-block;margin-top:6px}
+    </style>
+</head>
+<body>
+    <div class="c">
+        <div class="h">
+            <h1>📋 DataDrop</h1>
+            <p>paste · share · done</p>
+            <div class="status" id="status">
+                <span class="dot"></span>
+                <span id="statusTxt">ready</span>
+            </div>
+        </div>
+
+        <!-- Setup box (shows when not configured) -->
+        <div class="setup" id="setup" style="display:none">
+            <h3>⚙️ Quick Setup</h3>
+            <p>Enter your Supabase project details (one-time setup)</p>
+            <input type="text" id="urlInput" placeholder="https://xxxxx.supabase.co">
+            <input type="text" id="keyInput" placeholder="Your anon public key">
+            <button onclick="saveConfig()">Save & Connect</button>
+            <a href="https://supabase.com/dashboard" target="_blank" class="setup-link">Get free Supabase account →</a>
+        </div>
+
+        <div class="card">
+            <textarea id="data" placeholder="paste anything here to share..."></textarea>
+            <div class="row">
+                <button class="btn bp" id="shareBtn" onclick="share()">↑ Share</button>
+                <button class="btn bs" onclick="clearAll()">Clear</button>
+            </div>
+            <div id="shareRes" class="hide"></div>
+
+            <div class="d">or retrieve with code</div>
+
+            <div class="row">
+                <input type="text" class="ci" id="code" placeholder="ABC123" maxlength="6">
+                <button class="btn bp" id="getBtn" onclick="get()" style="flex:0 0 auto;padding:11px 18px">↓ Get</button>
+            </div>
+            <div id="getRes" class="hide"></div>
+        </div>
+
+        <div class="exp" id="expander" onclick="togglePanel()">
+            <div class="exp-i">🗂</div>
+            <div class="exp-t">
+                <span>My Recent Shares</span>
+                <small id="count">0 items</small>
+            </div>
+            <span class="exp-a">▼</span>
+        </div>
+
+        <div class="panel" id="panel">
+            <div class="pc" id="list"></div>
+        </div>
+
+        <div class="foot">
+            data expires in 24 hours · powered by supabase · 
+            <a href="#" onclick="resetConfig()" style="color:#ccc;text-decoration:none">reset setup</a>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const $ = id => document.getElementById(id);
+        let supabase;
+        let history = JSON.parse(localStorage.getItem('dd_hist') || '[]');
+
+        // Check if configured
+        const config = JSON.parse(localStorage.getItem('dd_config') || '{}');
+        
+        if (config.url && config.key) {
+            initSupabase(config.url, config.key);
+        } else {
+            $('setup').style.display = 'block';
+        }
+
+        function initSupabase(url, key) {
+            supabase = window.supabase.createClient(url, key);
+            $('setup').style.display = 'none';
+            checkConnection();
+        }
+
+        function saveConfig() {
+            const url = $('urlInput').value.trim();
+            const key = $('keyInput').value.trim();
+            
+            if (!url || !key) {
+                toast('please fill both fields');
+                return;
+            }
+
+            if (!url.includes('supabase.co')) {
+                toast('invalid supabase URL');
+                return;
+            }
+
+            localStorage.setItem('dd_config', JSON.stringify({ url, key }));
+            initSupabase(url, key);
+            toast('connected!');
+        }
+
+        function resetConfig() {
+            if (confirm('Reset configuration?')) {
+                localStorage.removeItem('dd_config');
+                location.reload();
+            }
+        }
+
+        async function checkConnection() {
+            try {
+                const { data, error } = await supabase
+                    .from('shares')
+                    .select('code')
+                    .limit(1);
+                
+                if (error && error.message.includes('relation')) {
+                    $('status').classList.add('off');
+                    $('statusTxt').textContent = 'setup table';
+                    toast('run SQL setup first (see docs)');
+                } else {
+                    $('status').classList.remove('off');
+                    $('statusTxt').textContent = 'connected';
+                }
+            } catch(e) {
+                $('status').classList.add('off');
+                $('statusTxt').textContent = 'error';
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            
+            $('code').addEventListener('keydown', e => {
+                if (e.key === 'Enter') get();
+            });
+            
+            $('data').addEventListener('keydown', e => {
+                if (e.ctrlKey && e.key === 'Enter') share();
+            });
+        });
+
+        // Generate code
+        function generateCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return code;
+        }
+
+        // Share
+        async function share() {
+            if (!supabase) {
+                $('setup').style.display = 'block';
+                toast('configure supabase first');
+                return;
+            }
+
+            const data = $('data').value.trim();
+            const btn = $('shareBtn');
+            
+            if (!data) {
+                showResult('shareRes', 're', 'please enter something to share');
+                return;
+            }
+
+            if (data.length > 500000) {
+                showResult('shareRes', 're', 'data too large (max 500KB)');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spin"></div>';
+            
+            try {
+                let code = generateCode();
+                let attempts = 0;
+
+                // Check if code exists
+                while (attempts < 5) {
+                    const { data: existing } = await supabase
+                        .from('shares')
+                        .select('code')
+                        .eq('code', code)
+                        .single();
+                    
+                    if (!existing) break;
+                    code = generateCode();
+                    attempts++;
+                }
+
+                // Insert
+                const { error } = await supabase
+                    .from('shares')
+                    .insert([{
+                        code: code,
+                        data: data,
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    }]);
+
+                if (error) throw error;
+
+                saveToHistory(code, data);
+                
+                $('shareRes').className = 'r rs';
+                $('shareRes').innerHTML = `
+                    <div class="rh">
+                        <span class="rl">your code (expires in 24h)</span>
+                        <button class="rx" onclick="hideResult('shareRes')">×</button>
+                    </div>
+                    <div class="code">${code}</div>
+                    <div class="ra">
+                        <button class="btn bp sm" onclick="copyText('${code}', 'code copied')">Copy Code</button>
+                        <button class="btn bs sm" onclick="copyFromServer('${code}')">Copy Data</button>
+                    </div>
+                `;
+                $('data').value = '';
+                
+            } catch(e) {
+                console.error('Share error:', e);
+                showResult('shareRes', 're', 'failed: ' + e.message);
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '↑ Share';
+        }
+
+        // Get
+        async function get() {
+            if (!supabase) {
+                $('setup').style.display = 'block';
+                toast('configure supabase first');
+                return;
+            }
+
+            const code = $('code').value.toUpperCase().trim();
+            const btn = $('getBtn');
+            
+            if (!code) {
+                showResult('getRes', 're', 'please enter a code');
+                return;
+            }
+            
+            if (code.length !== 6) {
+                showResult('getRes', 're', 'code must be 6 characters');
+                return;
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spin"></div>';
+            
+            try {
+                const { data, error } = await supabase
+                    .from('shares')
+                    .select('*')
+                    .eq('code', code)
+                    .single();
+
+                if (error || !data) {
+                    showResult('getRes', 're', 'not found or expired');
+                    btn.disabled = false;
+                    btn.innerHTML = '↓ Get';
+                    return;
+                }
+
+                // Check expiry
+                if (new Date(data.expires_at) < new Date()) {
+                    await supabase.from('shares').delete().eq('code', code);
+                    showResult('getRes', 're', 'code expired');
+                    btn.disabled = false;
+                    btn.innerHTML = '↓ Get';
+                    return;
+                }
+
+                const escaped = escapeHtml(data.data);
+                const escapedJs = escapeJs(data.data);
+                
+                $('getRes').className = 'r rb';
+                $('getRes').innerHTML = `
+                    <div class="rh">
+                        <span class="rl">${code} · ${timeAgo(new Date(data.created_at).getTime())}</span>
+                        <button class="rx" onclick="hideResult('getRes')">×</button>
+                    </div>
+                    <div class="rd">${escaped}</div>
+                    <div class="ra">
+                        <button class="btn bp sm" onclick="copyText(\`${escapedJs}\`, 'copied')">Copy</button>
+                        <button class="btn bs sm" onclick="loadToEditor(\`${escapedJs}\`)">Edit</button>
+                    </div>
+                `;
+                $('code').value = '';
+                
+            } catch(e) {
+                console.error('Get error:', e);
+                showResult('getRes', 're', 'failed to retrieve');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '↓ Get';
+        }
+
+        // UI helpers
+        function showResult(id, type, msg) {
+            $(id).className = `r ${type}`;
+            $(id).innerHTML = `<div style="text-align:center;color:${type === 're' ? '#dc2626' : '#333'};font-size:12px">${msg}</div>`;
+        }
+
+        function hideResult(id) {
+            $(id).className = 'hide';
+        }
+
+        function clearAll() {
+            $('data').value = '';
+            $('code').value = '';
+            hideResult('shareRes');
+            hideResult('getRes');
+        }
+
+        function loadToEditor(data) {
+            $('data').value = data;
+            $('data').focus();
+            hideResult('getRes');
+            toast('loaded to editor');
+        }
+
+        function togglePanel() {
+            $('expander').classList.toggle('open');
+            $('panel').classList.toggle('open');
+        }
+
+        // History
+        function saveToHistory(code, data) {
+            history = history.filter(i => i.code !== code);
+            history.unshift({ 
+                code, 
+                preview: data.substring(0, 80),
+                time: Date.now() 
+            });
+            if (history.length > 15) history = history.slice(0, 15);
+            localStorage.setItem('dd_hist', JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            $('count').textContent = history.length + ' items';
+            
+            if (!history.length) {
+                $('list').innerHTML = '<div class="empty">no recent shares</div>';
+                return;
+            }
+            
+            $('list').innerHTML = history.map(item => `
+                <div class="item">
+                    <div class="item-h">
+                        <span class="item-c">${item.code}</span>
+                        <span class="item-t">${timeAgo(item.time)}</span>
+                    </div>
+                    <div class="item-p">${escapeHtml(item.preview)}</div>
+                    <div class="item-a">
+                        <button class="bx" onclick="copyText('${item.code}', 'code copied')">Code</button>
+                        <button class="bx" onclick="copyFromServer('${item.code}')">Copy</button>
+                        <button class="bx" onclick="loadFromServer('${item.code}')">Load</button>
+                        <button class="bx bd" onclick="removeFromHistory('${item.code}')">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeFromHistory(code) {
+            history = history.filter(i => i.code !== code);
+            localStorage.setItem('dd_hist', JSON.stringify(history));
+            loadHistory();
+            toast('removed');
+        }
+
+        // Server operations
+        async function copyFromServer(code) {
+            if (!supabase) return;
+            try {
+                const { data } = await supabase
+                    .from('shares')
+                    .select('data')
+                    .eq('code', code)
+                    .single();
+                
+                if (data) {
+                    await navigator.clipboard.writeText(data.data);
+                    toast('copied');
+                } else {
+                    toast('not found');
+                    removeFromHistory(code);
+                }
+            } catch(e) {
+                toast('failed');
+            }
+        }
+
+        async function loadFromServer(code) {
+            if (!supabase) return;
+            try {
+                const { data } = await supabase
+                    .from('shares')
+                    .select('data')
+                    .eq('code', code)
+                    .single();
+                
+                if (data) {
+                    $('data').value = data.data;
+                    $('data').focus();
+                    toast('loaded');
+                } else {
+                    toast('not found');
+                    removeFromHistory(code);
+                }
+            } catch(e) {
+                toast('failed');
+            }
+        }
+
+        // Clipboard
+        async function copyText(text, msg) {
+            try {
+                await navigator.clipboard.writeText(text);
+                toast(msg || 'copied');
+            } catch(e) {
+                toast('copy failed');
+            }
+        }
+
+        // Toast
+        function toast(msg) {
+            const t = $('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        // Utils
+        function timeAgo(ts) {
+            const diff = Date.now() - ts;
+            if (diff < 60000) return 'now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            return Math.floor(diff / 86400000) + 'd ago';
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function escapeJs(str) {
+            return str
+                .replace(/\\/g, '\\\\')
+                .replace(/`/g, '\\`')
+                .replace(/\$/g, '\\$')
+                .replace(/\n/g, '\\n')
+                .replace(/\r/g, '\\r');
+        }
+    </script>
+</body>
+</html>
